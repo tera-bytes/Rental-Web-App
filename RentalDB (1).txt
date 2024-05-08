@@ -1,0 +1,158 @@
+drop database if exists rentalDB;
+create database rentalDB;
+use rentalDB;
+create table owner (
+    ID char(5) not null primary key,
+    fname varchar(30),
+    lname varchar(30),
+   phone char(10));
+
+create table manager (
+    ID char(5) not null primary key,
+    fname varchar(30),
+    lname varchar(30),
+   phone char(10));
+   
+create table rentalGroup (
+    code integer not null primary key,
+    parking enum('Y', 'N'),
+    access enum('Y', 'N'),
+    laundry enum('Y', 'N'),
+    type enum('House', 'Apartment', 'Room'),
+    beds int,
+    bath int,
+    cost float);
+
+create table renter (
+    ID char(5) not null primary key,
+    fname varchar(30),
+    lname varchar(30),
+   phone varchar(10),
+   rentalGroup int,
+   studentID char(7),
+   gradYear int,
+   program varchar(30),
+   foreign key (rentalGroup) references rentalGroup(code));
+
+
+create table property (
+    code integer not null primary key,
+    street varchar(100),
+    city varchar(50),
+    province char(2),
+    postalCode char(7),
+    apartmentNum int,
+    dateListed date,
+    leasedBy int, 
+    leaseSignDate date,
+    leaseEndDate date,
+    parking enum ("Y", "N"),
+    access enum ("Y", "N"),
+    laundry enum ("ensuite", "shared"),
+    type enum ("House", "Apartment", "Room"),
+    beds int,
+    bath int,
+    cost float,
+    managerID char(5),
+    managedSince date,
+   foreign key (leasedBy) references rentalGroup(code) on delete set null,
+   foreign key(managerID) references manager(id) on delete set null);
+
+create table house(
+    code integer not null primary key,
+    fence enum ("Y", "N"),
+    type enum("detached", "semi"),
+    foreign key (code) references property (code) on delete cascade);
+
+create table apartment(
+    code integer not null primary key,
+    floor int,
+    elevator enum ("Y", "N"),
+    foreign key (code) references property (code) on delete cascade);
+
+create table room(
+    code integer not null primary key,
+    numSharing int,
+    kitchen enum ("Y", "N"),
+    foreign key (code) references property (code) on delete cascade);
+
+create table furnishings(
+    code integer not null,
+    item varchar(100) not null,
+    primary key (code, item),
+    foreign key (code) references room (code) on delete cascade);
+
+create table ownsProperty (
+    ownerID char(5) not null,
+    propertyID int not null,
+    primary key (ownerID, propertyID),
+    foreign key (ownerID) references owner(id) on delete cascade,
+    foreign key (propertyID) references property(code) on delete cascade);
+
+
+
+-- Inserting data into 'owner' table
+INSERT INTO owner (ID, fname, lname, phone) VALUES ('O001', 'John', 'Doe', '1234567890');
+INSERT INTO owner (ID, fname, lname, phone) VALUES ('O002', 'Jane', 'Smith', '0987654321');
+INSERT INTO owner (ID, fname, lname, phone)
+VALUES ('O003', 'Emily', 'Clark', '1234567890');
+
+
+-- Inserting data into 'manager' table
+INSERT INTO manager (ID, fname, lname, phone) VALUES ('M001', 'Alice', 'Johnson', '1231231234');
+INSERT INTO manager (ID, fname, lname, phone) VALUES ('M002', 'Bob', 'Brown', '3213214321');
+
+-- Inserting data into 'rentalGroup' table
+INSERT INTO rentalGroup (code, parking, access, laundry, type, beds, bath, cost) VALUES (1001, 'Y', 'N', 'Y', 'House', 3, 2, 1200.00);
+INSERT INTO rentalGroup (code, parking, access, laundry, type, beds, bath, cost) VALUES (1002, 'N', 'Y', 'N', 'Apartment', 2, 1, 800.00);
+
+-- Inserting data into 'renter' table
+INSERT INTO renter (ID, fname, lname, phone, rentalGroup, studentID, gradYear, program) VALUES ('R001', 'Charlie', 'Green', '5556667777', 1001, 'S123456', 2023, 'Engineering');
+INSERT INTO renter (ID, fname, lname, phone, rentalGroup, studentID, gradYear, program) VALUES ('R002', 'Daisy', 'White', '8889990000', 1002, 'S654321', 2024, 'Arts');
+
+-- Inserting data into 'property' table
+INSERT INTO property (code, street, city, province, postalCode, dateListed, parking, access, laundry, type, beds, bath, cost, managerID) VALUES (2001, '123 Main St', 'Townsville', 'ON', 'A1A2B2', '2020-01-01', 'Y', 'Y', 'ensuite', 'House', 3, 2, 1500.00, 'M001');
+INSERT INTO property (code, street, city, province, postalCode, dateListed, parking, access, laundry, type, beds, bath, cost, managerID) VALUES (2002, '456 Side St', 'Villecity', 'BC', 'B2B3C3', '2020-02-01', 'N', 'N', 'shared', 'Apartment', 2, 1, 1000.00, 'M002');
+-- Insert an entry into the `property` table for a room
+INSERT INTO property (code, street, city, province, postalCode, type, beds, bath, cost, managerID)
+VALUES (3001, '123 Room St', 'Roomtown', 'RT', '12345', 'Room', 1, 1, 500.00, 'M001');
+
+-- Now insert the corresponding entry into the `room` table
+INSERT INTO room (code, numSharing, kitchen)
+VALUES (3001, 2, 'Y');
+
+-- Inserting data into 'house' table
+INSERT INTO house (code, fence, type) VALUES (2001, 'Y', 'detached');
+
+-- Inserting data into 'apartment' table
+INSERT INTO apartment (code, floor, elevator) VALUES (2002, 5, 'Y');
+
+
+
+-- Inserting data into 'furnishings' table
+-- Note: Ensure room codes match those entered in the 'room' table
+INSERT INTO furnishings (code, item) VALUES (3001, 'Table');
+INSERT INTO furnishings (code, item) VALUES (3001, 'Chair');
+
+-- Inserting data into 'ownsProperty' table
+INSERT INTO ownsProperty (ownerID, propertyID) VALUES ('O001', 2001);
+INSERT INTO ownsProperty (ownerID, propertyID) VALUES ('O002', 2002);
+INSERT INTO ownsProperty (ownerID, propertyID)
+VALUES ('O003', 3001);
+
+-- insert more data 
+INSERT INTO property (
+    code, street, city, province, postalCode, apartmentNum, dateListed, 
+    parking, access, laundry, type, beds, bath, cost, managerID
+) VALUES (
+    2003, '789 Hill Rd', 'Hilltown', 'HT', 'H1H2H3', 101, '2022-05-01', 
+    'Y', 'Y', 'ensuite', 'Apartment', 3, 1, 1100.00, 'M001'
+);
+
+INSERT INTO apartment (
+    code, floor, elevator
+) VALUES (
+    2003, 10, 'Y'
+);
+
+INSERT INTO ownsProperty (ownerID, propertyID) VALUES ('O002', 2003);
